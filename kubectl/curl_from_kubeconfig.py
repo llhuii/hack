@@ -22,9 +22,10 @@ class Config():
         content += c
 
     config = None
-    for l in yaml.load, json.loads:
+    for load in yaml.load, json.loads:
       try:
-        config = yaml.load(content)
+        config = load(content)
+        break
       except:
         pass
 
@@ -56,27 +57,15 @@ class Config():
   def get_current_context(self):
     return self.config["current-context"]
 
-  def fold(self, s, width=64):
-    return "\n".join([s[i:i+width]for i in range(0, len(s), width)])
-
   def save_crts(self):
     cluster = self.get_cluster()["cluster"]
-    ca_content = """-----BEGIN CERTIFICATE-----
-%s
------END CERTIFICATE-----""" % self.fold(cluster["certificate-authority-data"])
     ca_content = base64.b64decode(cluster["certificate-authority-data"].encode())
     save(self.ca_crt, ca_content)
 
     u = self.get_user()["user"]
-    crt_content = """-----BEGIN CERTIFICATE-----
-%s
------END CERTIFICATE-----""" % self.fold(u["client-certificate-data"])
     crt_content = base64.b64decode(u["client-certificate-data"].encode())
     save(self.client_crt, crt_content)
 
-    key_content = """-----BEGIN RSA PRIVATE KEY-----
-%s
------END RSA PRIVATE KEY-----""" % self.fold(u["client-key-data"])
     key_content = base64.b64decode(u["client-key-data"].encode())
     save(self.client_key, key_content)
 

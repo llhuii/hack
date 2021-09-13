@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: token-cat
+spec:
+  nodeSelector:
+    node-role.kubernetes.io/edge: ""
+  containers:
+  - name: token-cat
+    image: bash
+    command:
+      - "bash"
+      - "-c"
+      - | 
+        payload=$(cut -d. -f 2 /var/run/secrets/kubernetes.io/serviceaccount/token | tr _- /+)===
+        echo ${payload::${#payload}/4*4} | base64 -d

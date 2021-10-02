@@ -14,3 +14,15 @@ spec:
       - | 
         payload=$(cut -d. -f 2 /var/run/secrets/kubernetes.io/serviceaccount/token | tr _- /+)===
         echo ${payload::${#payload}/4*4} | base64 -d
+        : <<EOF
+        {"aud":["https://kubernetes.default.svc.cluster.local"],
+         "exp":1664076992,"iat":1632540992,"iss":"https://kubernetes.default.svc.cluster.local",
+         "kubernetes.io":{
+           "namespace":"sedna",
+           "pod":{"name":"token-cat","uid":"eaabc208-ea48-4203-bcf0-f9f64e4d7265"},
+           "serviceaccount":{"name":"default","uid":"f823f68b-a73e-4b1c-a8f1-7aa651f43660"},
+           "warnafter":1632544599
+          },
+          "nbf":1632540992,
+          "sub":"system:serviceaccount:sedna:default"}
+        EOF

@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hint-test
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: hint
+  template:
+    metadata:
+      generateName: abc-
+      labels:
+        app: hint
+    spec:
+      containers:
+      - name: updated
+        image: nginx:latest
+        ports:
+        - containerPort: 80
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hint
+  annotations: 
+    service.kubernetes.io/topology-aware-hints: auto
+spec:
+  selector:
+    app: hint
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80

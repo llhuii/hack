@@ -1,6 +1,4 @@
 #!/usr/bin/python
-""" A simple implementation jq:
-"""
 import sys
 import json
 from json import decoder
@@ -8,7 +6,7 @@ import traceback
 
 def parse_arg(argv):
   global is_raw, path
-
+  
   is_raw = "-r" in argv
   if is_raw: argv.remove("-r")
   path = argv[0] if argv else "."
@@ -16,23 +14,28 @@ def parse_arg(argv):
 parse_arg(sys.argv[1:])
 
 def get_field(obj, field):
-  if not field:
+  if not field or obj is None:
     yield obj
     return
   sub_index = None
   if "[" in field:
     field, o = field.split("[")
     o = o.strip("]")
+    if field:
+        obj = obj.get(field)
     if not o:
-      for s in obj.get(field, [None]):
+      for s in obj or [None]:
         yield s
       return
     sub_index = int(o)
-  v = obj.get(field, None)
-  if sub_index is not None:
-    yield v[sub_index]
+  else: obj = obj.get(field, None)
+  if obj is not None and sub_index is not None:
+    if sub_index >= len(obj):
+      yield None
+      return 
+    yield obj[sub_index]
   else:
-    yield v
+    yield obj
 
 def _get(obj, paths):
   if not paths:
@@ -47,6 +50,9 @@ def _get(obj, paths):
   return
 
 def get(obj, path):
+  if not isinstance(obj, (dict, tuple, list)):
+    yield None
+    return
   path = path.strip()
   if path.startswith('"') or path.startswith("'"):
     yield path[1:-1]
@@ -57,7 +63,7 @@ def get(obj, path):
     return
 
   if path.startswith('select'):
-    # select( .key = "value" )
+    # select( .key == "value" )
     sel = path.split('select', 1)[-1].strip()[1:-1]  # strip '()'
     left, right = sel.split('==')
     l = list(get(obj, left))
@@ -75,13 +81,12 @@ class MyDecoder(decoder.JSONDecoder):
 
 infile = sys.stdin
 outfile = sys.stdout
-#infile = open('/tmp/1')
 
 with infile:
-  try:
+  try: 
     for oo in json.load(infile, cls=MyDecoder):
       for obj in get(oo, path):
-        if is_raw and isinstance(obj, str):
+        if is_raw  and isinstance(obj, (str, unicode)):
           outfile.write(obj)
         else:
           json.dump(obj, outfile, sort_keys=True, indent=4, separators=(",", ": "))
